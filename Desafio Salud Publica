@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Desafío Estadístico: Muestreo y Confianza</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-6">
+  <div id="game" class="bg-white shadow-xl rounded-2xl p-8 max-w-2xl w-full text-center">
+    <h1 class="text-3xl font-bold mb-6 text-blue-700">🎮 Desafío Estadístico: Muestreo y Confianza</h1>
+
+    <!-- Introducción -->
+    <div id="intro">
+      <p class="mb-4">Pon a prueba tus conocimientos sobre muestreo, población e intervalos de confianza. ¡Responde correctamente, gana puntos y domina los cálculos!</p>
+      <button onclick="startGame()" class="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700">Comenzar</button>
+    </div>
+
+    <!-- Cuestionario -->
+    <div id="quiz" class="hidden">
+      <h2 id="question" class="text-xl font-semibold mb-4"></h2>
+      <div id="options" class="space-y-2 mb-4"></div>
+      <button onclick="nextQuestion()" id="nextBtn" class="hidden bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700">Siguiente</button>
+      <p id="feedbackQuiz" class="mt-2 font-semibold"></p>
+    </div>
+
+    <!-- Ejercicios prácticos -->
+    <div id="practice" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4 text-blue-700">🧮 Ejercicios Prácticos</h2>
+      <p class="mb-4">Realiza los cálculos y obtén puntos extra si aciertas.</p>
+
+      <div class="bg-gray-100 p-4 rounded-xl mb-4">
+        <h3 class="font-semibold mb-2">1️⃣ Tamaño de muestra</h3>
+        <p class="text-sm mb-2">Usa la fórmula: n = (Z² * p * q * N) / (E² * (N - 1) + Z² * p * q)</p>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <input id="N" type="number" placeholder="Población (N)" class="p-2 border rounded">
+          <input id="p" type="number" placeholder="Proporción (p)" step="0.01" class="p-2 border rounded">
+          <input id="Z" type="number" placeholder="Z (nivel confianza)" step="0.01" class="p-2 border rounded">
+          <input id="E" type="number" placeholder="Error máximo (E)" step="0.01" class="p-2 border rounded">
+          <input id="respuestaN" type="number" placeholder="Tu respuesta (n)" class="col-span-2 p-2 border rounded">
+        </div>
+        <button onclick="checkSampleAnswer()" class="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700">Comprobar</button>
+        <p id="feedbackSample" class="mt-2 font-semibold"></p>
+      </div>
+
+      <div class="bg-gray-100 p-4 rounded-xl mb-6">
+        <h3 class="font-semibold mb-2">2️⃣ Intervalo de confianza</h3>
+        <p class="text-sm mb-2">IC = p ± Z * √(p(1−p)/n)</p>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <input id="p2" type="number" placeholder="Proporción (p)" step="0.01" class="p-2 border rounded">
+          <input id="n2" type="number" placeholder="Tamaño de muestra (n)" class="p-2 border rounded">
+          <input id="Z2" type="number" placeholder="Z" step="0.01" class="p-2 border rounded">
+          <input id="resInferior" type="number" placeholder="Límite inferior" step="0.001" class="p-2 border rounded">
+          <input id="resSuperior" type="number" placeholder="Límite superior" step="0.001" class="p-2 border rounded">
+        </div>
+        <button onclick="checkICAnswer()" class="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700">Comprobar</button>
+        <p id="feedbackIC" class="mt-2 font-semibold"></p>
+      </div>
+
+      <button onclick="endGame()" class="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700">Finalizar</button>
+    </div>
+
+    <!-- Resultados -->
+    <div id="result" class="hidden">
+      <h2 class="text-2xl font-bold mb-4">Resultados Finales</h2>
+      <p id="score" class="text-lg mb-4"></p>
+      <a id="shareLink" href="#" target="_blank" class="text-blue-600 underline mb-4 block">Compartir este juego</a>
+      <button onclick="restartGame()" class="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700">Jugar de nuevo</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: '¿Qué diferencia principal existe entre censo y muestreo?',
+        options: [
+          'El censo estudia solo una parte de la población',
+          'El muestreo abarca toda la población',
+          'El censo analiza a todos los individuos, el muestreo solo una parte'
+        ],
+        answer: 2
+      },
+      {
+        question: 'En un estudio con 2000 pacientes, si se eligen 200 al azar, el método usado es:',
+        options: [
+          'Muestreo aleatorio simple',
+          'Muestreo sistemático',
+          'Muestreo por conglomerados'
+        ],
+        answer: 0
+      },
+      {
+        question: '¿Qué representa el nivel de confianza en un intervalo?',
+        options: [
+          'El porcentaje de personas encuestadas',
+          'El grado de seguridad de que el intervalo contiene el valor real',
+          'El tamaño total de la población'
+        ],
+        answer: 1
+      },
+      {
+        question: '¿Qué ocurre si el tamaño de la muestra aumenta?',
+        options: [
+          'El intervalo de confianza se amplía',
+          'El intervalo de confianza se estrecha',
+          'No cambia el intervalo'
+        ],
+        answer: 1
+      },
+      {
+        question: 'Cálculo: si N=2000, p=0.5, Z=1.96, E=0.05, ¿aproximadamente cuál es el tamaño de muestra?',
+        options: ['100', '323', '1000'],
+        answer: 1
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    function startGame() {
+      document.getElementById('intro').classList.add('hidden');
+      document.getElementById('quiz').classList.remove('hidden');
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = questions[current];
+      document.getElementById('question').textContent = q.question;
+      const optionsDiv = document.getElementById('options');
+      const feedback = document.getElementById('feedbackQuiz');
+      feedback.textContent = '';
+      optionsDiv.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.className = 'block w-full bg-gray-200 px-4 py-2 rounded-lg hover:bg-blue-100';
+        btn.onclick = () => selectAnswer(i);
+        optionsDiv.appendChild(btn);
+      });
+      document.getElementById('nextBtn').classList.add('hidden');
+    }
+
+    function selectAnswer(selected) {
+      const q = questions[current];
+      const feedback = document.getElementById('feedbackQuiz');
+      const options = document.querySelectorAll('#options button');
+      options.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.answer) btn.classList.add('bg-green-400');
+        else if (i === selected && i !== q.answer) btn.classList.add('bg-red-400');
+      });
+      if (selected === q.answer) {
+        score += 10;
+        feedback.textContent = '✅ Correcto (+10 puntos)';
+        feedback.classList.add('text-green-600');
+      } else {
+        feedback.textContent = '❌ Incorrecto';
+        feedback.classList.add('text-red-600');
+      }
+      document.getElementById('nextBtn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      current++;
+      if (current < questions.length) {
+        showQuestion();
+      } else {
+        document.getElementById('quiz').classList.add('hidden');
+        document.getElementById('practice').classList.remove('hidden');
+      }
+    }
+
+    function checkSampleAnswer() {
+      const N = parseFloat(document.getElementById('N').value);
+      const p = parseFloat(document.getElementById('p').value);
+      const q = 1 - p;
+      const Z = parseFloat(document.getElementById('Z').value);
+      const E = parseFloat(document.getElementById('E').value);
+      const respuesta = parseFloat(document.getElementById('respuestaN').value);
+      const feedback = document.getElementById('feedbackSample');
+      if (isNaN(N) || isNaN(p) || isNaN(Z) || isNaN(E) || isNaN(respuesta)) return alert('Completa todos los campos.');
+      const n = (Z**2 * p * q * N) / ((E**2 * (N - 1)) + (Z**2 * p * q));
+      const nCalc = Math.round(n);
+      const diff = Math.abs(respuesta - nCalc);
+      if (diff <= 10) {
+        feedback.textContent = `✅ Correcto (+15 puntos). Valor teórico: ${nCalc}`;
+        feedback.classList.add('text-green-600');
+        score += 15;
+      } else {
+        feedback.textContent = `❌ Incorrecto. Valor teórico: ${nCalc}`;
+        feedback.classList.add('text-red-600');
+      }
+    }
+
+    function checkICAnswer() {
+      const p = parseFloat(document.getElementById('p2').value);
+      const n = parseFloat(document.getElementById('n2').value);
+      const Z = parseFloat(document.getElementById('Z2').value);
+      const inf = parseFloat(document.getElementById('resInferior').value);
+      const sup = parseFloat(document.getElementById('resSuperior').value);
+      const feedback = document.getElementById('feedbackIC');
+      if (isNaN(p) || isNaN(n) || isNaN(Z) || isNaN(inf) || isNaN(sup)) return alert('Completa todos los campos.');
+      const error = Z * Math.sqrt(p * (1 - p) / n);
+      const lower = parseFloat((p - error).toFixed(3));
+      const upper = parseFloat((p + error).toFixed(3));
+      const ok = Math.abs(inf - lower) < 0.01 && Math.abs(sup - upper) < 0.01;
+      if (ok) {
+        feedback.textContent = `✅ Correcto (+15 puntos). Intervalo: [${lower}, ${upper}]`;
+        feedback.classList.add('text-green-600');
+        score += 15;
+      } else {
+        feedback.textContent = `❌ Incorrecto. Intervalo correcto: [${lower}, ${upper}]`;
+        feedback.classList.add('text-red-600');
+      }
+    }
+
+    function endGame() {
+      document.getElementById('practice').classList.add('hidden');
+      document.getElementById('result').classList.remove('hidden');
+      document.getElementById('score').textContent = `Puntuación final: ${score} puntos`; 
+      const url = encodeURIComponent(window.location.href);
+      document.getElementById('shareLink').href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    }
+
+    function restartGame() {
+      current = 0;
+      score = 0;
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('intro').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
